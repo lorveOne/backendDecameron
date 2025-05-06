@@ -99,11 +99,11 @@ class HabitacionInfoController extends Controller
             $habitacion = habitacion_info_tipo::create($validated);
 
             return response()->json([
-                'message' => 'success',
+                'success' => 'success',
                 'status' => 201,
                 'data' => $habitacion
             ], 201);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'An error occurred while creating the habitacion.',

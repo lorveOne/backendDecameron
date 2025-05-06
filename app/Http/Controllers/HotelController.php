@@ -13,7 +13,7 @@ class HotelController extends Controller
      * @author Lorenzo Sanchez
      * @return JSON
      */
-    public function getHotel()
+    public function get()
     {
         try {
             $hotels = Hotel::all();
@@ -62,7 +62,6 @@ class HotelController extends Controller
             if ($existingNit) {
                 return response()->json([
                     'error' => 'error',
-                    'status' => 409,
                     'message' => 'Ya existe un hotel con ese NIT.',
                 ], 409);
             }
@@ -71,7 +70,6 @@ class HotelController extends Controller
             if ($existingNombre) {
                 return response()->json([
                     'error' => 'error',
-                    'status' => 409,
                     'message' => 'Ya existe un hotel con ese nombre.',
                 ], 409);
             }
@@ -80,7 +78,7 @@ class HotelController extends Controller
             $hotel = Hotel::create($validated);
 
             return response()->json([
-                'message' => 'Hotel created successfully.',
+                'success' => 'success',
                 'status' => 201,
                 'data' => $hotel
             ], 201);
