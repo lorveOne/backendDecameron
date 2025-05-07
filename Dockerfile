@@ -58,10 +58,7 @@ RUN if [ "$APP_ENV" = "production" ]; then \
 # Copia el resto de la aplicación
 COPY . .
 
-# Genera clave de aplicación si no existe
-RUN if [ -z "$APP_KEY" ]; then \
-    php artisan key:generate --show; \
-    fi
+
 
 # Optimiza para producción
 RUN if [ "$APP_ENV" = "production" ]; then \
