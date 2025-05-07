@@ -23,6 +23,9 @@ WORKDIR /var/www/html
 # Copiar archivos del proyecto
 COPY . .
 
+RUN cp .env.example .env || true
+
+
 # Establecer permisos para Laravel
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
