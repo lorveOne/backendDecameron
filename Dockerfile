@@ -1,7 +1,7 @@
-# Usa la imagen oficial de PHP con FPM y Alpine (ligera)
-FROM php:8.2-fpm-alpine
+# Usa la imagen oficial de PHP con Alpine (ligera)
+FROM php:8.2-cli-alpine
 
-# Argumentos de construcción (para opciones configurables)
+# Argumentos de construcción
 ARG APP_ENV=production
 ARG APP_DEBUG=false
 
@@ -10,12 +10,11 @@ ENV APP_ENV=${APP_ENV}
 ENV APP_DEBUG=${APP_DEBUG}
 ENV APP_URL=${APP_URL}
 ENV APP_KEY=${APP_KEY}
-ENV LOG_CHANNEL=stderr
+ENV PORT=8080
+ENV HOST=0.0.0.0
 
 # Dependencias del sistema
 RUN apk add --no-cache \
-    nginx \
-    supervisor \
     libzip-dev \
     libpng-dev \
     libjpeg-turbo-dev \
@@ -49,7 +48,7 @@ WORKDIR /var/www/html
 # Copia solo los archivos necesarios para instalar dependencias primero
 COPY composer.json composer.lock ./
 
-# Instala dependencias (sin scripts para optimizar la construcción)
+# Instala dependencias
 RUN if [ "$APP_ENV" = "production" ]; then \
     composer install --no-dev --no-scripts --no-interaction --optimize-autoloader; \
     else \
@@ -76,15 +75,8 @@ RUN if [ "$APP_ENV" = "production" ]; then \
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Configuración de Nginx
-COPY docker/nginx.conf /etc/nginx/nginx.conf
-COPY docker/site.conf /etc/nginx/conf.d/default.conf
-
-# Configuración de Supervisor
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 # Puerto expuesto
-EXPOSE 8080
+EXPOSE ${PORT}
 
-# Comando de inicio
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Comando de inicio - Usa el servidor built-in de PHP
+CMD php artisan serve --host=${HOST} --port=${PORT}
