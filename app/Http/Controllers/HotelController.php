@@ -16,7 +16,7 @@ class HotelController extends Controller
     public function get()
     {
         try {
-            $hotels = Hotel::all();
+            $hotels = Hotel::orderBy('id', 'asc')->get();
 
             if ($hotels->isEmpty()) {
                 return response()->json([
@@ -142,7 +142,7 @@ class HotelController extends Controller
 
             return response()->json([
                 'message' => 'Hotel updated successfully.',
-                'status' => 200,
+                'success' => 'success',
                 'data' => $hotel
             ], 200);
         } catch (\Exception $e) {
@@ -178,11 +178,37 @@ class HotelController extends Controller
 
             return response()->json([
                 'message' => 'Hotel deleted successfully.',
-                'status' => 200
+                'success' => 'success',
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'An error occurred while deleting the hotel.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getById($id)
+    {
+        try {
+            // Buscar el hotel por ID
+            $hotel = Hotel::find($id);
+            if (!$hotel) {
+                return response()->json([
+                    'message' => 'error',
+                    'status' => 404,
+                    'data' => []
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'success',
+                'status' => 200,
+                'data' => $hotel
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while fetching the hotel.',
                 'error' => $e->getMessage()
             ], 500);
         }

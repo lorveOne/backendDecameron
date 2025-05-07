@@ -16,7 +16,8 @@ Route::group([
 //-------------------APIS PARA Habitacion
 Route::controller(HabitacionInfoController::class)->prefix('habitaciones')->group(function () {
   Route::get('/', 'getHabitacion');               // Obtener todos los hoteles
-  Route::get('/{id}', 'getHabitacionId');         // Obtener un hotel por ID
+  Route::get('/{id}/habitaciones', 'getHabitacionId');
+  Route::get('/{id}', 'getId');         // Obtener un hotel por ID
   Route::post('/', 'insertHabitacion');           // Crear un nuevo hotel
   Route::put('/{id}', 'updateHabitacion');           // Actualizar hotel por ID
   Route::delete('/{id}');     // Eliminar hotel por ID
