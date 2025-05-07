@@ -37,12 +37,12 @@ WORKDIR /var/www/html
 # 4. Copiar el código del proyecto (incluye .env.example)
 COPY . .
 
-# 5. Copiar .env.example a .env si no existe; luego generar APP_KEY
+# 5. Instalar dependencias de PHP con Composer (PRIMERO)
+RUN composer install --no-dev --optimize-autoloader
+
+# 6. Copiar .env.example a .env si no existe; luego generar APP_KEY (DESPUÉS de composer install)
 RUN cp .env.example .env \
   && php artisan key:generate --ansi
-
-# 6. Instalar dependencias de PHP con Composer
-RUN composer install --no-dev --optimize-autoloader
 
 # 7. Ajustar permisos en storage y cache
 RUN chown -R www-data:www-data storage bootstrap/cache \
@@ -67,4 +67,3 @@ ENV DB_CONNECTION=pgsql \
 # 10. Exponer el puerto 80 y arrancar Apache
 EXPOSE 80
 CMD ["apache2-foreground"]
-
