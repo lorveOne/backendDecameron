@@ -1,79 +1,45 @@
-# Usa la imagen oficial de PHP con Alpine (ligera)
-FROM php:8.2-cli-alpine
+# Imagen base oficial de PHP con Apache
+FROM php:8.2-apache
 
-# Argumentos de construcción
-ARG APP_ENV=production
-ARG APP_DEBUG=false
-
-# Variables de entorno
-ENV APP_ENV=${APP_ENV}
-ENV APP_DEBUG=${APP_DEBUG}
-ENV APP_URL=${APP_URL}
-ENV APP_KEY=${APP_KEY}
-ENV PORT=8080
-ENV HOST=0.0.0.0
-
-# Dependencias del sistema
-RUN apk add --no-cache \
-    libzip-dev \
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
     libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    oniguruma-dev \
+    libonig-dev \
     libxml2-dev \
-    postgresql-dev \
-    curl \
     zip \
     unzip \
-    git
+    git \
+    curl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Configuración de PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-    gd \
-    pdo \
-    pdo_pgsql \
-    pgsql \
-    mbstring \
-    xml \
-    zip \
-    opcache
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Instala Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Directorio de trabajo
+# Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Copia solo los archivos necesarios para instalar dependencias primero
-COPY composer.json composer.lock ./
-
-# Instala dependencias
-RUN if [ "$APP_ENV" = "production" ]; then \
-    composer install --no-dev --no-scripts --no-interaction --optimize-autoloader; \
-    else \
-    composer install --no-interaction --optimize-autoloader; \
-    fi
-
-# Copia el resto de la aplicación
+# Copiar archivos del proyecto
 COPY . .
 
+# Establecer permisos para Laravel
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
+# Configurar Apache para usar el directorio /public
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
-# Optimiza para producción
-RUN if [ "$APP_ENV" = "production" ]; then \
-    php artisan optimize:clear && \
-    php artisan optimize && \
-    php artisan view:cache && \
-    php artisan event:cache; \
-    fi
+RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf \
+    && sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/apache2.conf
 
-# Permisos para Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
-    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Habilitar mod_rewrite
+RUN a2enmod rewrite
 
-# Puerto expuesto
-EXPOSE ${PORT}
+# Instalar dependencias de PHP
+RUN composer install --no-dev --optimize-autoloader || true
 
-# Comando de inicio - Usa el servidor built-in de PHP
-CMD php artisan serve --host=${HOST} --port=${PORT}
+# Comandos opcionales para producción (comentados para evitar errores de build si faltan rutas o variables)
+# RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
+
+EXPOSE 80
+
+CMD ["apache2-foreground"]

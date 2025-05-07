@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
         Route::prefix('api')
             ->middleware('api')
             ->namespace($this->namespace ?? null)
-            ->group(base_path('routes/habitaInfoRouter.php'));
+            ->group(base_path('routes/HabitaInfoRouter.php'));
     }
 
       /**
